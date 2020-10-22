@@ -25,12 +25,12 @@ fi
 (cat <<END_HELP
 Dossier $(readlink -f $DONE):
         contient Les images qui ont bien ete classees.
-        Chaque image dans ce dossier est un hardlink¿¿½vers une image du dossier $AH
-        Peut etre supprimees¿½ sans rtes, mais sans gain de place.
+        Chaque image dans ce dossier est un hardlinkï¿½ï¿½ï¿½vers une image du dossier $AH
+        Peut etre supprimeesï¿½ï¿½ sans rtes, mais sans gain de place.
 Dossier $(readlink -f $DEL):
         Les images qui existaient deja a la bonne position et avec le bon contenu.
         On s'assure que le contenu est le bon en hashant les deux fichiers;
-        Les hash doivent e¿½t les memes et les noms aussi.
+        Les hash doivent eï¿½ï¿½t les memes et les noms aussi.
         Peut donc etre supprime sans perte, et recuperera de la place.
 Dossier $(readlink -f $AMB):
         Les images dans ce dossier auraient ecrase un fichier existant,
@@ -84,7 +84,7 @@ do
 
 echo "rawdate: $rawdate pretty: $prettydate from:$fromdir to:$todir base:$basext" >> $BASE/debug
 
-	if [ -z "$rawdate" ] || [ -z "prettydate" ]
+	if [ -z "$rawdate" ] || [ -z "$prettydate" ]
 	then
 		## file has no date in its headers. No video or no luck there.
 		echo "??? $f"
@@ -104,11 +104,11 @@ echo "rawdate: $rawdate pretty: $prettydate from:$fromdir to:$todir base:$basext
 				# Same inode does not mean same path
 				if [ "$(readlink -f "$target")" == "$(readlink -f "$f")" ]
 				then
-					# file is target, nothing to do.
+					# file _is_ target, nothing to do.
 					echo "=== $f"
 				else
-					## Both files have the same inode.
-					## Movin
+					## Both files have the same inode, but different pathes.
+					## Moving to "done"
 					echo ".== $f"
 					mkdir -p "$DONE/$fromdir"
 					mv "$f" "$DONE/$fromdir"
@@ -119,15 +119,14 @@ echo "rawdate: $rawdate pretty: $prettydate from:$fromdir to:$todir base:$basext
 				shaf=$(sha1sum -b "$f" | cut -f 1 -d' ')
 				if [ "$shat" == "$shaf" ]
 				then
-					## Both have the same content: this file goes to "delete"
-					## the file already in place is linked to "done".
+					## Both have the same content: this file goes to "safe_to_delete"
 					echo "..= $f"
 					mkdir -p "$DEL/$fromdir"
 					mv "$f" "$DEL/$fromdir"
 				else
 					## Both files differ in content. Ouch...
 					## Copying the file in 'ambiguous' and linking the file that should have 
-					## been overwritten next to it as .ORIG.mp4 for further investigation
+					## been overwritten next to it as .ORIG. for further investigation
 					echo "/!\ $f"
 					mkdir -p "$AMB/$fromdir"
 					mv "$f" "$AMB/$fromdir"
@@ -147,3 +146,4 @@ done
 
 # Deal with images.
 #exiftool -r -P '-Directory<DateTimeOriginal' -d chronos/%Y/%m/%d .
+
