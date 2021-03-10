@@ -10,9 +10,15 @@ unset UNATTENTED
 function show_help {
 	printf \
 "
-$0 [options]
+$0 [options] [to_sort]
 	-h shows this help
 	-d dry run (nothing is actually done)
+	-b the base directory, where to link files that have been sorted
+	-a the archive directory, where to store the photos by date
+	-y everything is accepted
+
+The current directory is recursively searched for files to sort. Files will disapear from here.
+They will be moved or hardlinked to the archive (and some of the folders in base for auditing purpose).
 "
 }
 
@@ -76,18 +82,11 @@ but I will not move anything at all.
 
 function mymv {
 	[ -n "$DRY" ] \
-		&& echo "not.mv $@" \
+		&& echo "would.mv $@" \
 		|| mv $@
 }
 
-mymv iii jjj
-
-mymv -f kkk lll
-
-exit 0;
-
 ##############################################################
-
 #ARCH=/share/Photos/chronologique
 #ARCH=$BASE/chronos
 
@@ -108,15 +107,17 @@ fi
 
 
 (cat <<END_HELP
+Le contenu de ce message est aussi disponible dans le fichier$BASE/README.TXT
+
 Dossier $(readlink -f $DONE):
         contient Les images qui ont bien ete classees.
-        Chaque image dans ce dossier est un hardlink vers une image du dossier $AH
-        Peut etre supprimees sans rtes, mais sans gain de place.
+        Chaque image dans ce dossier est un hardlink vers une image du dossier $ARCH
+        Peuvent etre supprimees sans pertes, mais sans gain de place.
 Dossier $(readlink -f $DEL):
         Les images qui existaient deja a la bonne position et avec le bon contenu.
         On s'assure que le contenu est le bon en hashant les deux fichiers;
         Les hash doivent etre les memes et les noms aussi.
-        Peut donc etre supprime sans perte, et recuperera de la place.
+        Peut donc etre supprime sans perte, et on recuperera de la place.
 Dossier $(readlink -f $AMB):
         Les images dans ce dossier auraient ecrase un fichier existant,
         mais dont le contenu n'est pas le meme (pas le meme hash).
@@ -129,7 +130,18 @@ Dossier $(readlink -f $ERR):
 END_HELP
 ) > $BASE/README.TXT
 
-date >> $BASE/debug
+printf \
+"
+  #######################################################
+  $(date)
+  command line    : $0 ${@@Q}
+  Analysing       :'$PWD'
+  Moving to (ARCH):'$ARCH'
+  Base      (BASE):'$BASE'
+  Dry-run    (DRY):'${DRY:-unset so no}'
+  Unattended      :'${UNATTENDED:-unset so no}'
+  #######################################################
+" >> $BASE/debug
 
 function raw_date() {
 	local f="$1"
